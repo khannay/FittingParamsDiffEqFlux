@@ -1,4 +1,6 @@
-# Fitting Differential Equations Parameters using a Neural Networks Approach
+# Parameter Fitting for ODEs
+
+Fitting Differential Equations Parameters using a Neural Networks Approach
 
 Some tutorial programs fiiting differentiable equation parameters using the DiffEqFlux and sciml packages for Julia. 
 
