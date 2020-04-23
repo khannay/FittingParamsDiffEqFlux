@@ -31,7 +31,8 @@ function InitPlot()
     end
     title!(pl, "Lorenz Chaos")
     xlabel!(pl, "Time")
-    ylabel!(pl, "X varable")
+    ylabel!(pl, "Variable")
+    savefig("Lorenz_init.png")
     display(pl)
 
 end
@@ -56,13 +57,13 @@ pguess=[0.8,0.1,0.1,10.5,28.5,9.0/3]
 function loss_adjoint(param)
   prediction = predict_adjoint(param)
   loss = sum(abs2,prediction - data)
-  loss,prediction
+  loss
 end
 
 function train_model(;pguess=[1.1,0.05,-0.05,10.2,28.2,9.0/3])
     println("The initial loss function is $(loss_adjoint(pguess)[1])")
-    #res = DiffEqFlux.sciml_train(loss_adjoint,pguess,ADAM(), maxiters=4000)
-    res = DiffEqFlux.sciml_train(loss_adjoint,pguess,BFGS(initial_stepnorm=0.0001), maxiters=4000)
+    resinit = DiffEqFlux.sciml_train(loss_adjoint,pguess,ADAM(), maxiters=4000)
+    res = DiffEqFlux.sciml_train(loss_adjoint,resinit.minimizer,BFGS(initial_stepnorm=0.0001), maxiters=4000)
     println("The parameters are $(res.minimizer) with final loss value $(res.minimum)")
     return(res)
 
@@ -81,6 +82,7 @@ function validationPlot(param, ic; vars=(1,2,3), tend=100.0)
     pl=plot(sol_fit, lw=2, legend=false, vars=vars, color=:green)
     plot!(pl,sol_actual,vars=vars,color=:blue)
     title!(pl,"Model Parameter Fits")
+    savefig("valid_plot_lorenz2.png")
     display(pl)
 
 end
@@ -91,6 +93,6 @@ lorenz_model.InitPlot()
 
 resL=lorenz_model.train_model()
 
-lorenz_model.plotFit(resL.minimizer; vars=(1,2,3), tend=20.0)
+lorenz_model.plotFit(resL.minimizer; vars=(1,2,3), tend=30.0)
 
 lorenz_model.plotFit(resL.minimizer; vars=(0,1), tend=30.0)
