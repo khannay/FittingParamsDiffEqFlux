@@ -8,8 +8,6 @@ tend=15.0
 tstart=0.0
 sampling=0.1
 
-
-
 function sl_oscillator(du,u,p,t)
     γ, ω0, β, K=p
     ψ,R=u
@@ -30,6 +28,7 @@ function InitPlot()
     title!(pl, "Oscillator Model")
     xlabel!(pl, "X")
     ylabel!(pl, "Y")
+    savefig("SL_init.png")
     display(pl)
 
 end
@@ -40,28 +39,24 @@ function predict_adjoint(param) # Our 1-layer neural network
     Array(concrete_solve(prob,Tsit5(),param[1:2],param[3:end],saveat=tstart:sampling:tend))
 end
 
-
 # Generate some data to fit, and add some noise to it
 data=predict_adjoint([0.0,0.08,0.1, 6.28, 0.1, 1.0])
 σN=0.05
 data+=σN*randn(size(data))
 data=abs.(data)
 
-
-
-
 function loss_adjoint(param)
   prediction = predict_adjoint(param)
   loss = sum(abs2,prediction - data)
-  loss,prediction
+  loss
 end
 
 function train_model(;pguess=[0.1,0.1,0.15, 6.0, 0.2, 0.8])
     println("The initial loss function is $(loss_adjoint(pguess)[1])")
-    res = DiffEqFlux.sciml_train(loss_adjoint,pguess,BFGS(initial_stepnorm = 0.0001))
+    resinit=DiffEqFlux.sciml_train(loss_adjoint,pguess,ADAM(),maxiters=3000)
+    res = DiffEqFlux.sciml_train(loss_adjoint,resinit.minimizer,BFGS(initial_stepnorm = 0.0001))
     println("The parameters are $(res.minimizer) with final loss value $(res.minimum)")
     return(res)
-
 end
 
 function plotFit(param)
@@ -90,6 +85,7 @@ function validationPlot(param, ic)
 
 
     pl=plot(pl1, pl2, pl3, layout=lay)
+    savefig("Sl_valid_2.png")
     display(pl)
 
 end
